@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ plot.name }} - Maydon ma'lumotlari{% endblock %}
+
+{% block content %}
+<!-- 1. Asosiy sarlavha -->
+<div class="mb-6">
+    <h1 class="text-3xl font-bold">{{ plot.name }}</h1>
+    <div class="flex items-center mt-2">
+        <span class="status-badge bg-{% if current_stats.status_class == 'yetarli' %}green{% elif current_stats.status_class == 'ortacha' %}yellow{% else %}red{% endif %}-100 text-{% if current_stats.status_class == 'yetarli' %}green{% elif current_stats.status_class == 'ortacha' %}yellow{% else %}red{% endif %}-800 px-3 py-1 rounded-full text-sm font-medium">
+            {{ current_stats.status }}
+        </span>
+        <span class="ml-4 text-gray-600">{{ field.name }}</span>
+    </div>
+</div>
+
+<!-- 2. Hozirgi holat -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-md p-4 h-full">
+            <h2 class="text-xl font-semibold mb-4">Hozirgi holat</h2>
+            
+<!-- Namlik -->
+<div class="mb-6">
+    <div class="flex justify-between items-center mb-2">
+        <span class="font-medium">Namlik:</span>
+        <span class="text-lg font-semibold">
+            {% if current_stats.humidity %}{{ current_stats.humidity|floatformat:1 }}%{% else %}Ma'lumot yo'q{% endif %}
+        </span>
+    </div>
+    <div class="w-full bg-gray-200 rounded-full h-2.5">
+        <div class="h-2.5 rounded-full 
+            {% if current_stats.humidity < 40 %}bg-red-500
+            {% elif current_stats.humidity < 70 %}bg-yellow-500
+            {% else %}bg-green-500{% endif %}" 
+            style="width: {% if current_stats.humidity %}{{ current_stats.humidity }}%{% else %}0{% endif %}">
+        </div>
+    </div>
+    <div class="flex justify-between text-xs text-gray-500 mt-1">
+        <span>0%</span>
+        <span>100%</span>
+    </div>
+</div>
+
+<!-- Harorat -->
+<div class="mb-6">
+    <div class="flex justify-between items-center mb-2">
+        <span class="font-medium">Harorat:</span>
+        <span class="text-lg font-semibold">
+            {% if current_stats.temperature %}{{ current_stats.temperature|floatformat:1 }}°C{% else %}Ma'lumot yo'q{% endif %}
+        </span>
+    </div>
+    <div class="w-full bg-gray-200 rounded-full h-2.5">
+        <div class="h-2.5 rounded-full 
+            {% if current_stats.temperature > 30 %}bg-red-500
+            {% elif current_stats.temperature > 25 %}bg-yellow-500
+            {% else %}bg-blue-500{% endif %}" 
+            style="width: {% if current_stats.temperature %}{% widthratio current_stats.temperature 50 100 %}%{% else %}0{% endif %}">
+        </div>
+    </div>
+    <div class="flex justify-between text-xs text-gray-500 mt-1">
+        <span>0°C</span>
+        <span>50°C</span>
+    </div>
+</div>
+            
+            <!-- Ekin ma'lumotlari -->
+            <div class="p-4 rounded-lg border border-gray-200 bg-gray-50">
+                <h3 class="font-medium mb-2">Ekin turi</h3>
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <!-- Ikonka -->
+                    </div>
+                    <div>
+                        <span class="font-semibold">{{ crop_info.type }}</span>
+                        <p class="text-sm text-gray-600">Maydon: {{ crop_info.area }}</p>
+                        <p class="text-sm text-gray-600">Ekilgan: {{ crop_info.planted_date }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 3. Diagrammalar -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-md p-4 h-full">
+            <h2 class="text-xl font-semibold mb-4">So'nggi 7 kun statistikasi</h2>
+            <canvas id="plot-chart" width="100%" height="50"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- 4. Tarix -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-md p-4 h-full">
+            <h2 class="text-xl font-semibold mb-4">Holatlar tarixi</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vaqt</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Namlik</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Harorat</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Holat</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for record in history %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ record.timestamp|date:"d.m.Y H:i" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {% if record.moisture_level %}{{ record.moisture_level|floatformat:1 }}%{% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {% if record.temperature %}{{ record.temperature|floatformat:1 }}°C{% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if record.status == 'yetarli' %}bg-green-100 text-green-800
+                                    {% elif record.status == 'ortacha' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ record.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 5. Xarita va sensorlar -->
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-md p-4 h-full">
+            <h2 class="text-xl font-semibold mb-4">Maydon xaritasi</h2>
+            <div class="w-full h-64 rounded-lg border bg-gray-100 overflow-hidden relative">
+                {% if map_data.latitude and map_data.longitude %}
+                <div id="plot-map" class="w-full h-full"></div>
+                {% else %}
+                <!-- Yandex static map with field location -->
+                <img src="https://static-maps.yandex.ru/1.x/?ll=69.240562,41.311081&z=12&size=600,300&l=map&pt=69.240562,41.311081,pm2rdl&text={{ plot.field.location|urlencode }}" 
+                    alt="{{ plot.field.location }} xaritasi"
+                    class="w-full h-full object-cover">
+                <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20">
+                    <div class="text-center bg-black bg-opacity-50 px-4 py-2 rounded-lg text-white">
+                        <p>Aniq koordinatalar ko'rsatilmagan</p>
+                        <p class="text-sm mt-1">{{ plot.field.location }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mt-4">
+                <h3 class="font-medium mb-2">Bog'langan sensorlar</h3>
+                <div class="space-y-2">
+                    {% for sensor in sensors %}
+                    <div class="flex items-center justify-between p-2 
+                        {% if sensor.sensor_type == 'humidity' %}bg-blue-50 border border-blue-100
+                        {% else %}bg-red-50 border border-red-100{% endif %} rounded">
+                        <span class="flex items-center">
+                            {% if sensor.sensor_type == 'humidity' %}
+                            <!-- Namlik sensor ikonkasi -->
+                            <span class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+                                </svg>
+                                Namlik datchiki
+                            </span>
+                            {% else %}
+                            <!-- Harorat sensor ikonkasi -->
+                            <span class="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                Harorat datchiki
+                            </span>
+                            {% endif %}
+                            {{ sensor.get_sensor_type_display }}
+                        </span>
+                        <span class="text-sm font-medium">
+                            Oxirgi ma'lumot: {{ sensor.last_seen|timesince }} oldin
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Diagrammalar
+    const ctx = document.getElementById('plot-chart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.labels|safe }},
+            datasets: [
+                {
+                    label: 'Namlik (%)',
+                    data: {{ chart_data.humidity|safe }},
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    tension: 0.3,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Harorat (°C)',
+                    data: {{ chart_data.temperature|safe }},
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                    tension: 0.3,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    min: {{ chart_data.humidity_min|safe }},
+                    max: {{ chart_data.humidity_max|safe }}
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    min: {{ chart_data.temp_min|safe }},
+                    max: {{ chart_data.temp_max|safe }},
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                }
+            }
+        }
+    });
+    
+    // 2. Xarita
+    {% if map_data.latitude and map_data.longitude %}
+    const map = L.map('plot-map').setView([{{ map_data.latitude }}, {{ map_data.longitude }}], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    L.marker([{{ map_data.latitude }}, {{ map_data.longitude }}])
+        .addTo(map)
+        .bindPopup("<b>{{ map_data.plot_name|escapejs }}</b><br>{{ map_data.field_name|escapejs }}");
+    {% endif %}
+});
+</script>
+{% endblock %}

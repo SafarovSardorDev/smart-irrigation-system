@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Aqlli Sug'orish Tizimi{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.2/dist/cdn.min.js" defer></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-green-700 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="/" class="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+                <span class="text-xl font-bold">Aqlli Sug'orish Tizimi</span>
+            </a>
+            <div class="flex items-center space-x-4">
+                <a href="#" class="px-3 py-2 rounded hover:bg-green-600 transition">Bosh sahifa</a>
+                <a href="#" class="px-3 py-2 rounded hover:bg-green-600 transition">Maydonlar</a>
+                <a href="#" class="px-3 py-2 rounded hover:bg-green-600 transition">Statistika</a>
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" class="flex items-center space-x-1 px-3 py-2 rounded hover:bg-green-600 transition">
+                        <span>Foydalanuvchi</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white text-gray-700 rounded shadow-lg py-2 z-20">
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-100">Profil</a>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-100">Sozlamalar</a>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-100">Chiqish</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-green-800 text-white py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="text-lg font-semibold mb-2">Aqlli Sug'orish Tizimi</h3>
+                    <p>Ekin maydonlarini samarali boshqarish uchun zamonaviy yechim</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Bog'lanish</h3>
+                    <p>Tel: +998 99 123 45 67</p>
+                    <p>Email: info@aqllisugurish.uz</p>
+                </div>
+            </div>
+            <div class="mt-6 text-center">
+                <p>© 2025 Aqlli Sug'orish Tizimi. Barcha huquqlar himoyalangan.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- WebSocket skript -->
+    <script>
+        const webSocketProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const webSocketUrl = `${webSocketProtocol}//${window.location.host}/ws/status/`;
+        
+        function connectWebSocket() {
+            const socket = new WebSocket(webSocketUrl);
+            
+            socket.onopen = function(e) {
+                console.log('WebSocket ulanish o\'rnatildi');
+            };
+            
+            socket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                handleStatusUpdate(data);
+            };
+            
+            socket.onclose = function(e) {
+                console.log('WebSocket ulanish uzildi. Qayta ulanish...');
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            socket.onerror = function(e) {
+                console.error('WebSocket xatolik:', e);
+            };
+        }
+        
+        function handleStatusUpdate(data) {
+            // WebSocket orqali kelgan ma'lumotlarni qayta ishlash
+            // Bu funksiya har bir sahifada qayta belgilanadi
+        }
+        
+        // WebSocket ga ulanish
+        connectWebSocket();
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
