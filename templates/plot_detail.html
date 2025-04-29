@@ -20,49 +20,49 @@
         <div class="bg-white rounded-lg shadow-md p-4 h-full">
             <h2 class="text-xl font-semibold mb-4">Hozirgi holat</h2>
             
-<!-- Namlik -->
-<div class="mb-6">
-    <div class="flex justify-between items-center mb-2">
-        <span class="font-medium">Namlik:</span>
-        <span class="text-lg font-semibold">
-            {% if current_stats.humidity %}{{ current_stats.humidity|floatformat:1 }}%{% else %}Ma'lumot yo'q{% endif %}
-        </span>
-    </div>
-    <div class="w-full bg-gray-200 rounded-full h-2.5">
-        <div class="h-2.5 rounded-full 
-            {% if current_stats.humidity < 40 %}bg-red-500
-            {% elif current_stats.humidity < 70 %}bg-yellow-500
-            {% else %}bg-green-500{% endif %}" 
-            style="width: {% if current_stats.humidity %}{{ current_stats.humidity }}%{% else %}0{% endif %}">
-        </div>
-    </div>
-    <div class="flex justify-between text-xs text-gray-500 mt-1">
-        <span>0%</span>
-        <span>100%</span>
-    </div>
-</div>
+            <!-- Namlik -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium">Namlik:</span>
+                    <span class="text-lg font-semibold">
+                        {% if current_stats.humidity %}{{ current_stats.humidity|floatformat:1 }}%{% else %}Ma'lumot yo'q{% endif %}
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="h-2.5 rounded-full 
+                        {% if current_stats.humidity < 40 %}bg-red-500
+                        {% elif current_stats.humidity < 70 %}bg-yellow-500
+                        {% else %}bg-green-500{% endif %}" 
+                        style="width: {% if current_stats.humidity %}{{ current_stats.humidity }}%{% else %}0{% endif %}">
+                    </div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>0%</span>
+                    <span>100%</span>
+                </div>
+            </div>
 
-<!-- Harorat -->
-<div class="mb-6">
-    <div class="flex justify-between items-center mb-2">
-        <span class="font-medium">Harorat:</span>
-        <span class="text-lg font-semibold">
-            {% if current_stats.temperature %}{{ current_stats.temperature|floatformat:1 }}°C{% else %}Ma'lumot yo'q{% endif %}
-        </span>
-    </div>
-    <div class="w-full bg-gray-200 rounded-full h-2.5">
-        <div class="h-2.5 rounded-full 
-            {% if current_stats.temperature > 30 %}bg-red-500
-            {% elif current_stats.temperature > 25 %}bg-yellow-500
-            {% else %}bg-blue-500{% endif %}" 
-            style="width: {% if current_stats.temperature %}{% widthratio current_stats.temperature 50 100 %}%{% else %}0{% endif %}">
-        </div>
-    </div>
-    <div class="flex justify-between text-xs text-gray-500 mt-1">
-        <span>0°C</span>
-        <span>50°C</span>
-    </div>
-</div>
+            <!-- Harorat -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-medium">Harorat:</span>
+                    <span class="text-lg font-semibold">
+                        {% if current_stats.temperature %}{{ current_stats.temperature|floatformat:1 }}°C{% else %}Ma'lumot yo'q{% endif %}
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="h-2.5 rounded-full 
+                        {% if current_stats.temperature > 30 %}bg-red-500
+                        {% elif current_stats.temperature > 25 %}bg-yellow-500
+                        {% else %}bg-blue-500{% endif %}" 
+                        style="width: {% if current_stats.temperature %}{% widthratio current_stats.temperature 50 100 %}%{% else %}0{% endif %}">
+                    </div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>0°C</span>
+                    <span>50°C</span>
+                </div>
+            </div>
             
             <!-- Ekin ma'lumotlari -->
             <div class="p-4 rounded-lg border border-gray-200 bg-gray-50">
@@ -83,9 +83,15 @@
     
     <!-- 3. Diagrammalar -->
     <div class="lg:col-span-2">
-        <div class="bg-white rounded-lg shadow-md p-4 h-full">
+        <div class="bg-white rounded-lg shadow-md p-4 h-full" style="max-height: 500px; overflow: hidden;">
             <h2 class="text-xl font-semibold mb-4">So'nggi 7 kun statistikasi</h2>
-            <canvas id="plot-chart" width="100%" height="50"></canvas>
+            <div style="position: relative; height: 400px; width: 100%;">
+                
+                <canvas id="plot-chart"></canvas>
+                <div id="no-data-message" class="absolute inset-0 flex items-center justify-center text-gray-500" style="display: none;">
+                    Ma'lumotlar mavjud emas
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -199,14 +205,33 @@
 document.addEventListener('DOMContentLoaded', function() {
     // 1. Diagrammalar
     const ctx = document.getElementById('plot-chart').getContext('2d');
-    new Chart(ctx, {
+    const noDataMessage = document.getElementById('no-data-message');
+    
+    // Ma'lumotlarni olish va tekshirish
+    let labels = {{ chart_data.labels|default:"[]"|safe }};
+    let humidityData = {{ chart_data.humidity|default:"[]"|safe }};
+    let temperatureData = {{ chart_data.temperature|default:"[]"|safe }};
+
+    
+    // Valid ma'lumotlarni filtr lash
+    const validHumidityData = humidityData.filter(val => val !== null && val !== 0 && !isNaN(val));
+    const validTemperatureData = temperatureData.filter(val => val !== null && val !== 0 && !isNaN(val));
+    
+    // Ma'lumotlar mavjudligini tekshirish
+    if (validHumidityData.length === 0 && validTemperatureData.length === 0) {
+        noDataMessage.style.display = 'flex';
+    } else {
+        noDataMessage.style.display = 'none';
+    }
+    
+    const chart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: {{ chart_data.labels|safe }},
+            labels: labels,
             datasets: [
                 {
                     label: 'Namlik (%)',
-                    data: {{ chart_data.humidity|safe }},
+                    data: humidityData,
                     borderColor: 'rgba(54, 162, 235, 1)',
                     backgroundColor: 'rgba(54, 162, 235, 0.1)',
                     tension: 0.3,
@@ -214,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 {
                     label: 'Harorat (°C)',
-                    data: {{ chart_data.temperature|safe }},
+                    data: temperatureData,
                     borderColor: 'rgba(255, 99, 132, 1)',
                     backgroundColor: 'rgba(255, 99, 132, 0.1)',
                     tension: 0.3,
@@ -224,32 +249,107 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             scales: {
                 y: {
                     type: 'linear',
                     display: true,
                     position: 'left',
-                    min: {{ chart_data.humidity_min|safe }},
-                    max: {{ chart_data.humidity_max|safe }}
+                    min: validHumidityData.length ? Math.min(...validHumidityData) - 10 : 0,
+                    max: validHumidityData.length ? Math.max(...validHumidityData) + 10 : 100,
+                    title: {
+                        display: true,
+                        text: 'Namlik (%)'
+                    }
                 },
                 y1: {
                     type: 'linear',
                     display: true,
                     position: 'right',
-                    min: {{ chart_data.temp_min|safe }},
-                    max: {{ chart_data.temp_max|safe }},
+                    min: validTemperatureData.length ? Math.min(...validTemperatureData) - 5 : 0,
+                    max: validTemperatureData.length ? Math.max(...validTemperatureData) + 5 : 50,
+                    title: {
+                        display: true,
+                        text: 'Harorat (°C)'
+                    },
                     grid: {
                         drawOnChartArea: false
                     }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Sana'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
                 }
             }
         }
     });
+
+    // WebSocket orqali yangilanishlarni boshqarish
+    window.handleStatusUpdate = function(data) {
+        console.log('WebSocket data:', data); // Debugging uchun
+        if (data.plot_id === {{ plot.id }}) {
+            // Yangi ma'lumotlarni qo'shish
+            const newHumidity = isNaN(parseFloat(data.humidity)) ? 0.0 : parseFloat(data.humidity);
+            const newTemperature = isNaN(parseFloat(data.temperature)) ? 0.0 : parseFloat(data.temperature);
+            const newLabel = new Date().toLocaleDateString('uz-UZ', { day: '2-digit', month: '2-digit' });
+
+            // Agar yangi sana hali qo'shilmagan bo'lsa
+            if (!labels.includes(newLabel)) {
+                labels.push(newLabel);
+                humidityData.push(newHumidity);
+                temperatureData.push(newTemperature);
+            } else {
+                // Oxirgi elementni yangilash
+                humidityData[humidityData.length - 1] = newHumidity;
+                temperatureData[temperatureData.length - 1] = newTemperature;
+            }
+
+            // So'nggi 7 kunlik ma'lumotlarni saqlash
+            if (labels.length > 7) {
+                labels.shift();
+                humidityData.shift();
+                temperatureData.shift();
+            }
+
+            // Valid ma'lumotlarni qayta hisoblash
+            const newValidHumidityData = humidityData.filter(val => val !== null && val !== 0 && !isNaN(val));
+            const newValidTemperatureData = temperatureData.filter(val => val !== null && val !== 0 && !isNaN(val));
+
+            // Ma'lumotlar bo'shligini tekshirish
+            if (newValidHumidityData.length === 0 && newValidTemperatureData.length === 0) {
+                noDataMessage.style.display = 'flex';
+            } else {
+                noDataMessage.style.display = 'none';
+            }
+
+            // Y-eksenlarni yangilash
+            chart.options.scales.y.min = newValidHumidityData.length ? Math.min(...newValidHumidityData) - 10 : 0;
+            chart.options.scales.y.max = newValidHumidityData.length ? Math.max(...newValidHumidityData) + 10 : 100;
+            chart.options.scales.y1.min = newValidTemperatureData.length ? Math.min(...newValidTemperatureData) - 5 : 0;
+            chart.options.scales.y1.max = newValidTemperatureData.length ? Math.max(...newValidTemperatureData) + 5 : 50;
+
+            // Grafikni yangilash
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = humidityData;
+            chart.data.datasets[1].data = temperatureData;
+            chart.update();
+        }
+    };
     
     // 2. Xarita
     {% if map_data.latitude and map_data.longitude %}
     const map = L.map('plot-map').setView([{{ map_data.latitude }}, {{ map_data.longitude }}], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
     L.marker([{{ map_data.latitude }}, {{ map_data.longitude }}])
         .addTo(map)
         .bindPopup("<b>{{ map_data.plot_name|escapejs }}</b><br>{{ map_data.field_name|escapejs }}");

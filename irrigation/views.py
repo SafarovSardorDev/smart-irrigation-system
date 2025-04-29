@@ -66,12 +66,15 @@ def home_view(request):
     
     return render(request, 'home.html', context)
 
+import logging
 
+# Logger sozlamasi
+logger = logging.getLogger(__name__)
 class PlotDetailView(DetailView):
     model = Plot
     template_name = 'plot_detail.html'
     context_object_name = 'plot'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         plot = self.object
@@ -109,6 +112,9 @@ class PlotDetailView(DetailView):
             .order_by('date')
         )
         
+        # Log qilish uchun
+        logger.info(f"Daily stats for plot {plot.id}: {list(daily_stats)}")
+        
         # Diagrammalar uchun tayyorlash
         dates = []
         humidity_data = []
@@ -120,21 +126,25 @@ class PlotDetailView(DetailView):
             
             hum = next((x for x in daily_stats 
                        if x['date'] == date and x['sensor_type'] == 'humidity'), None)
-            humidity_data.append(hum['avg_value'] if hum else 0)
+            humidity_data.append(float(hum['avg_value']) if hum and hum['avg_value'] is not None else 0.0)
             
             temp = next((x for x in daily_stats 
                         if x['date'] == date and x['sensor_type'] == 'temperature'), None)
-            temperature_data.append(temp['avg_value'] if temp else 0)
+            temperature_data.append(float(temp['avg_value']) if temp and temp['avg_value'] is not None else 0.0)
         
         context['chart_data'] = {
             'labels': dates,
             'humidity': humidity_data,
             'temperature': temperature_data,
-            'humidity_min': min(humidity_data) if humidity_data else 0,
-            'humidity_max': max(humidity_data) if humidity_data else 100,
-            'temp_min': min(temperature_data) if temperature_data else 0,
-            'temp_max': max(temperature_data) if temperature_data else 40,
+            'humidity_min': min(humidity_data) if any(humidity_data) else 0.0,
+            'humidity_max': max(humidity_data) if any(humidity_data) else 100.0,
+            'temp_min': min(temperature_data) if any(temperature_data) else 0.0,
+            'temp_max': max(temperature_data) if any(temperature_data) else 40.0,
         }
+
+        
+        # Log qilish uchun
+        logger.info(f"Chart data for plot {plot.id}: {context['chart_data']}")
         
         # 4. Tarix jadvali uchun ma'lumotlar
         context['history'] = (
@@ -163,4 +173,3 @@ class PlotDetailView(DetailView):
         )
         
         return context
-    

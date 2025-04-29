@@ -8,28 +8,17 @@ class FieldAdmin(admin.ModelAdmin):
     list_display = ('name', 'location', 'total_area', 'owner', 'created_at')
     list_filter = ('owner',)
     search_fields = ('name', 'location')
-    readonly_fields = ('created_at', 'map_preview')
+    readonly_fields = ('created_at',)
+    
     fieldsets = (
-        (_('Asosiy ma\'lumot'), {
+        (_("Asosiy ma'lumot"), {
             'fields': ('name', 'location', 'total_area', 'owner')
         }),
-        (_('Xarita'), {
-            'fields': ('latitude', 'longitude', 'map_preview')
-        }),
-        (_('Tarix'), {
+        (_("Tarix"), {
             'fields': ('created_at',)
         }),
     )
 
-    def map_preview(self, obj):
-        if obj.latitude and obj.longitude:
-            return format_html(
-                '<iframe width="100%" height="300" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" '
-                'src="https://maps.google.com/maps?q={},{}&z=15&output=embed"></iframe>',
-                obj.latitude, obj.longitude
-            )
-        return _("Koordinatalar ko'rsatilmagan")
-    map_preview.short_description = _("Xarita ko'rinishi")
 
 @admin.register(Plot)
 class PlotAdmin(admin.ModelAdmin):
