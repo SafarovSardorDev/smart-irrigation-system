@@ -55,19 +55,21 @@
 git clone https://github.com/SafarovSardorDev/smart-irrigation-system
 cd smart-irrigation-system
 ```
+
 ### 2. Virtual muhit va kutubxonalarni o‘rnatish:
 ```bash
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-```bash
 python manage.py migrate
 python manage.py createsuperuser
 ```
+
 ### 4. Serverni ishga tushirish:
 ```bash
 python manage.py runserver
 ```
+
 ### Brauzerda Platformani ochish:
 - Brauzerda http://127.0.0.1:8000/ manziliga o'ting (yoki frontendning localhost portiga). 🌐
 - Platforma ishga tushganini va barcha funksiyalarni sinab ko'ring. 🧑‍💻
@@ -84,7 +86,7 @@ python manage.py runserver
 ## 👤 Muallif
  
 Created by AutoNomous team ✨
-Our Team Telegram Channel: [AutoNomousTeam](https://t.me/imsafarov)
+Our Team Telegram Channel: [AutoNomousTeam](https://t.me/autonomous_flight_technologies)
 Telegram: [@imsafarov](https://t.me/imsafarov)
 
 ###📜 Litsenziya
