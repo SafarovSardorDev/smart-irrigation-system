@@ -86,10 +86,10 @@ python manage.py runserver
 ## 👤 Muallif
  
 Created by AutoNomous team ✨
-Our Team Telegram Channel: [AutoNomousTeam](https://t.me/autonomous_flight_technologies)
-Telegram: [@imsafarov](https://t.me/imsafarov)
+- Our Team Telegram Channel: [AutoNomousTeam](https://t.me/autonomous_flight_technologies)
+- Telegram: [@imsafarov](https://t.me/imsafarov)
 
-###📜 Litsenziya
+### 📜 Litsenziya
 This project is licensed under the MIT License - see the LICENSE file for details. 📝
 
 Copyright (c) 2025 Sardor
